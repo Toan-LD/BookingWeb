@@ -1,0 +1,98 @@
+﻿@model BookingWeb.Server.ViewModels.PagedList<BookingWeb.Server.ViewModels.BenXeVM>
+
+@{
+	ViewData["Title"] = "Bến xe";
+}
+<h1 class="h3 mb-2 text-gray-800">Quản lý bến xe</h1>
+@Html.Partial("./../Shared/Alert.cshtml")
+
+<div class="card shadow mb-4">
+
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Bảng dữ liệu</h6>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên bến xe</th>
+                    <th>Tên tỉnh thành</th>
+                    <th>Trạng thái</th>
+                    <th>Chức Năng</th>
+                </tr>
+                </thead>
+                <tbody id="tuyenDuongTable">
+                @foreach (var bx in Model.Items)
+                {
+                    <tr>
+                        <td>@bx.IdBenXe</td>
+                        <td>@bx.TenBenXe</td>
+                        <td>@bx.TinhThanhVM.TenTinhThanh</td>
+                        <td>@(bx.TrangThai == true ? "Hoạt động" : "Không hoạt động")</td>
+                        <td>
+                            <a href="@Url.Action("Detail", "BenXeAdmin", new { id = bx.IdBenXe })" class="btn btn-info">Chi tiết</a>
+                            <form asp-action="Deactivate" asp-controller="BenXeAdmin" asp-route-id="@bx.IdBenXe" method="post" style="display: inline;">
+                                <button type="submit" class="btn @(bx.TrangThai == true ? "btn-danger" : "btn-success")">
+                                    @(bx.TrangThai == true ? "Khóa" : "Mở khóa")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <nav class="d-flex justify-content-between">
+                <ul class="pagination">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { pageNumber = i })">@i</a>
+                        </li>
+                    }
+                </ul>
+                <div>
+                    <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addBenXeModal">Thêm mới</a>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addBenXeModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm bến xe mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBenXeForm" asp-action="AddBenXe" method="post">
+                    <div class="mb-3">
+                        <label for="tenBenXe" class="form-label">Tên bến xe</label>
+                        <input type="text" class="form-control" id="tenBenXe" name="tenBenXe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tinhThanh" class="form-label">Tỉnh thành</label>
+                        <select  name="IdTinhThanh" id="tinhThanh" class="form-control" required>
+                            <option value="">Chọn tỉnh thành</option>
+                            
+                            @foreach (var tt in ViewBag.TinhThanhList)
+                            {
+                                <option value="@tt.IdTinhThanh">@tt.TenTinhThanh</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

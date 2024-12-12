@@ -1,0 +1,287 @@
+﻿@model IEnumerable<BookingWeb.Server.ViewModels.ChuyenXeVM>
+
+@{
+ViewData["Title"] = "Tuyến đường";
+}
+
+<style>
+    .table-container {
+        height: 550px; 
+        overflow: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        text-align: left;
+        padding: 8px;
+    }
+    
+    td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+
+<h1 class="h3 mb-2 text-gray-800">Quản lý lịch trình</h1>
+@Html.Partial("./../Shared/Alert.cshtml")
+
+<div class="card shadow mb-4">
+
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Bảng dữ liệu</h6>
+
+        <!-- Topbar Search -->
+        <div class="input-group justify-content-end" style="width: 60%">
+            <div class="d-flex">
+                <form asp-action="Index"  asp-controller="ChuyenXeAdmin" method="get" class="d-flex">
+                    <input type="search" class="form-control bg-light border-0 small me-1" placeholder="Search for..." name="SearchString" aria-label="Search">
+                </form>
+            </div>
+            <div class="ml-4 mr-4">
+                <a asp-action="Index" asp-controller="ChuyenXeAdmin">Xem tất cả</a>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success" id="btn-them-tu-dong">Thêm tự động</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive table-container">   @*style="max-height: 400px; overflow-y: auto;"*@
+            <table class="table table-bordered table-fixed" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên xe - Biển số</th>
+                    <th>Điểm đi - Thời gian</th>
+                    <th>Điểm đến - Thời gian</th>
+                    <th>Ngày đi</th>
+                    <th>Giá vé</th>
+                    <th>Trạng thái</th>
+                    <th>Chức Năng</th>
+                </tr>
+                </thead>
+                <tbody id="idTable" >
+                @foreach (var cx in Model)
+                {
+                    <tr>
+                        <td >@cx.IdChuyenXe</td>
+                        <td>@cx.XeVM?.LoaiXeVM?.TenLoai<br>@cx.XeVM?.BienSo</td>
+                        <td>
+                            @cx.TuyenDuongVM?.NoiKhoiHanh - @cx.ThoiGianKh
+                            <br/>
+                            @cx.TuyenDuongVM?.TenBenXeDi
+                        </td>
+                        <td>
+                            @cx.TuyenDuongVM?.NoiDen - @cx.ThoiGianDen
+                            <br/>
+                            @cx.TuyenDuongVM?.TenBenXeDen
+                        </td>
+                        <td>@cx.NgayKhoiHanh</td>
+                        <td>@cx.TuyenDuongVM?.GiaVe</td>
+                        <td>@(cx.TrangThai == true ? "Hoạt động" : "Không hoạt động")</td>
+                        <td>
+                            <a href="@Url.Action("Detail", "ChuyenXeAdmin", new { id = cx.IdChuyenXe })" class="btn btn-info">Chi tiết</a>
+                            @if (@cx.TrangThai == true)
+                            {
+                                <a type="submit" class="btn btn-danger" onclick="confirmDeactivate(@cx.IdChuyenXe)">Khóa</a>
+                            }
+                            else if (@cx.TrangThai == false)
+                            {
+                                <a type="submit" class="btn btn-success" onclick="confirmDeactivate(@cx.IdChuyenXe)">Mở khóa</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+
+            @*<nav class="d-flex justify-content-between align-items-center">
+                <ul class="pagination">
+                    @if (Model.TotalPages > 20)
+                    {
+                        <li class="page-item @(1 == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { pageNumber = 1 })">1</a>
+                        </li>
+
+                        @if (Model.CurrentPage > 3)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(2, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages - 1, Model.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { pageNumber = i })">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.CurrentPage < Model.TotalPages - 2)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.TotalPages == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.TotalPages })">@Model.TotalPages</a>
+                        </li>
+                    }
+                    else
+                    {
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { pageNumber = i })">@i</a>
+                            </li>
+                        }
+                    }
+                    <li class="ml-2">
+                        <form asp-action="Index" method="get" class="d-flex align-items-center">
+                            <input type="number" name="pageNumber" class="form-control" style="width: 80px; margin-right: 5px;" min="1" max="@Model.TotalPages" placeholder="Trang"/>
+                            <button type="submit" class="btn btn-primary">Go</button>
+                        </form>
+                    </li>
+                </ul>
+                
+
+            </nav>*@
+        </div>
+
+    </div>
+    <div class="d-flex align-items-center pb-4 justify-content-end mr-5">
+        <a class="btn btn-success ms-3" id="btnThemMoiTuyenDuong" data-bs-toggle="modal" data-bs-target="#addChuyenXe">Thêm mới</a>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addChuyenXe" aria-hidden="true" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addXeModalLabel">Thêm Chuyến Xe Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addChuyenXeForm" asp-action="AddChuyenXe" asp-controller="ChuyenXeAdmin" method="post">
+                    <div class="form-group">
+                        <label for="TenLoai">Tên Xe</label>
+                        <select name="XeVM.IdXe" class="form-control" id="tenXe" required>
+                            <option value="" selected>Chọn xe</option>
+                            @foreach (var xe in ViewBag.XeList)
+                            {
+                                <option value="@xe.IdXe">@xe.BienSo</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="TenLoai" >Tên tuyến đường</label>
+                        <select name="TuyenDuongVM.IdTuyenDuong" id="tuyenDuong" class="form-control" required>
+                            <option value="" selected>Chọn tuyến đường</option>
+                            @foreach (var tuyenduong in ViewBag.TuyenDuongList)
+                            {
+                                if (@tuyenduong.TrangThai == true)
+                                {
+                                    <option value="@tuyenduong.IdTuyenDuong">@tuyenduong.NoiKhoiHanhNavigation?.IdTinhThanhNavigation?.TenTinhThanh - @tuyenduong.NoiDenNavigation?.IdTinhThanhNavigation?.TenTinhThanh</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="TenLoai">Thời gian khởi hành(Dự kiến)</label>
+                        <input type="time" class="form-control" id="thoiGianKH" name="ThoiGianKh" required value="19:30">
+                    </div>
+                    <div class="form-group">
+                        <label for="TenLoai">Thời gian kết thúc(Dự kiến)</label>
+                        <input type="time" class="form-control" id="thoiGianKT" name="ThoiGianDen" required value="05:45">
+                    </div>
+                    <div class="form-group">
+                        <label for="TenLoai">Ngày  đi</label>
+                        <input type="date" class="form-control" id="ngayDi" name="NgayKhoiHanh" required >
+                    </div>
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="~/js/admin/search.js"></script>
+<script src="~/js/admin/chuyenXe.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $("#btn-them-tu-dong").click(function () {
+            
+            alert("Thêm chuyến xe tự động");
+            
+            $.ajax({
+                url: '/api/ChuyenXe/AddChuyenXeTheoNgay',
+                type: 'POST',
+                success: function (response) {
+                    console.log(response);
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Lỗi API:', error);
+                }
+            });
+        });
+        
+        $("#addChuyenXeForm").on('submit', function(e) {
+            e.preventDefault();
+            var timeStart = $('#thoiGianKH').val();
+            var timeEnd = $('#thoiGianKT').val();
+            var  idTuyenDuong = $('#tuyenDuong option:selected').val();
+            var idXeCheck = $('#tenXe option:selected').val();
+
+            console.log(timeStart);
+            console.log(timeEnd);
+            console.log(idTuyenDuong);
+            console.log("Id xe check " +  idXeCheck);
+
+            $.ajax({
+                url: '/api/ChuyenXe/GetByTime',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    timeStart: timeStart,
+                    timeEnd: timeEnd,
+                    idTuyenDuong: idTuyenDuong,
+                    idXe : idXeCheck,
+                    ngayKhoiHanh : $('#ngayDi').val()
+                },
+                success: function (response) {
+                    
+                    // Truy cập vào mảng $values
+                    const data = response.$values;
+
+                    if (Array.isArray(data) && data.length > 0) {
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Cảnh báo',
+                                text: 'Xe đã được sử dụng',
+                            });
+                    } else {
+                        e.target.submit();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Lỗi API:', error);
+                }
+            });
+        })
+    });
+</script>

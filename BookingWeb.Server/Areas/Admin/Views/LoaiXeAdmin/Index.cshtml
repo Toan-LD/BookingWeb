@@ -1,0 +1,91 @@
+﻿@model BookingWeb.Server.ViewModels.PagedLoaiXeVM
+
+@{
+	ViewData["Title"] = "Loại xe";
+}
+<h1 class="h3 mb-2 text-gray-800">Quản lý loại xe</h1>
+@Html.Partial("./../Shared/Alert.cshtml")
+
+<div class="card shadow mb-4">
+
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Bảng dữ liệu</h6>
+        
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên loại xe</th>
+                        <th>Số ghê</th>
+                        <th>Trạng thái</th>
+                        <th>Chức Năng</th>
+                    </tr>
+                </thead>
+                <tbody id="tuyenDuongTable">
+                    @foreach (var lx in Model.LoaiXes)
+                    {
+                        <tr>
+                            <td>@lx.IdLoai</td>
+                            <td>@lx.TenLoai</td>
+                            <td>@lx.SoGhe</td>
+                            <td>@(lx.TrangThai == true ? "Hoạt động" : "Không hoạt động")</td>
+                            <td>
+                                <a asp-action="Detail" asp-controller="LoaiXeAdmin" asp-route-id="@lx.IdLoai" class="btn btn-info">Chi tiết</a>
+                                <form asp-action="DeactivateLoaiXe" asp-controller="LoaiXeAdmin" asp-route-id="@lx.IdLoai" method="post" style="display: inline;">
+                                    <button type="submit" class="btn @(lx.TrangThai ? "btn-danger" : "btn-success")">
+                                        @(lx.TrangThai ? "Khóa" : "Mở khóa")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <nav class="d-flex justify-content-between">
+                <ul class="pagination">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { pageNumber = i })">@i</a>
+                        </li>
+                    }
+                </ul>
+                <div>
+                    <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addLoaiXeModal">Thêm mới</a>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addLoaiXeModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm loại xe mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addLoaiXeForm" asp-action="AddLoaiXe" method="post">
+                    <div class="mb-3">
+                        <label for="tenLoai" class="form-label">Tên loại xe</label>
+                        <input type="text" class="form-control" id="tenLoai" name="tenLoai" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="soGhe" class="form-label">Số ghế</label>
+                        <input type="number" min="20" max="34" class="form-control" id="soGhe" name="soGhe" value="34" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Thêm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/admin/loaixe.js"></script>
